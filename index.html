@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlazaVea · BioSec v7</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Exo+2:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<!-- ALARM OVERLAY -->
+<div class="alarm-overlay" id="alarm-overlay"></div>
+<div class="alarm-badge" id="alarm-badge">⚠ ALERTA DE SEGURIDAD ⚠<br><span id="alarm-who" style="font-size:12px;font-weight:400;display:block;margin-top:2px"></span></div>
+
+<!-- LOADING -->
+<div class="ls" id="ls">
+  <div class="ls-brand">PLAZA<span>VEA</span></div>
+  <div class="ls-tagline">Sistema Biométrico Avanzado v7</div>
+  <div class="ls-bar"><div class="ls-fill" id="ls-fill"></div></div>
+  <div class="ls-msg" id="ls-msg">Inicializando...</div>
+  <div class="ls-dots"><div class="ls-dot"></div><div class="ls-dot"></div><div class="ls-dot"></div></div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="pv">PLAZA<span>VEA</span></div>
+      <div class="sub">BioSec v7 · Acceso Seguro</div>
+    </div>
+    <div class="login-err" id="login-err">Contraseña incorrecta</div>
+    <div class="field"><label class="label">Usuario</label><input type="text" id="login-user" value="admin" readonly style="background:var(--bg4);color:var(--text3)"></div>
+    <div class="field"><label class="label">Contraseña</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px;justify-content:center" onclick="doLogin()">Ingresar al sistema</button>
+    <div style="margin-top:12px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3)">Contraseña: <span style="color:var(--amber)">2005</span></div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="">
+</div>
+
+<!-- SHELL -->
+<div class="shell" id="main-shell" style="display:none">
+<aside class="sidebar">
+  <div class="sid-header">
+    <div class="sid-logo">
+      <div class="sid-logo-icon">🔺</div>
+      <div class="sid-brand-text">
+        <div class="pv">PLAZA<span>VEA</span></div>
+        <div class="tag">BioSec v7 · IA Facial</div>
+      </div>
+    </div>
+    <div class="sid-status-bar">
+      <div class="ssb-dot"></div>
+      <span class="ssb-txt" id="sys-status-txt">SISTEMA ACTIVO</span>
+    </div>
+  </div>
+  <nav class="sid-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Principal</div>
+      <button class="nav-btn active" onclick="go('dashboard')"><span class="nb-icon">⌂</span> Dashboard</button>
+      <button class="nav-btn" onclick="go('cameras')"><span class="nb-icon">◉</span> Cámaras en vivo <span class="nav-badge" id="nb-cams">0</span></button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Registros</div>
+      <button class="nav-btn" onclick="go('registros')"><span class="nb-icon">≡</span> Entradas / Salidas <span class="nav-badge" id="nb-regs">0</span></button>
+      <button class="nav-btn" onclick="go('alertas')"><span class="nb-icon">⚠</span> Alertas <span class="nav-badge" id="nb-alerts">0</span></button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Admin</div>
+      <button class="nav-btn" onclick="go('personal')"><span class="nb-icon">◈</span> Personal <span class="nav-badge" id="nb-emp">0</span></button>
+      <button class="nav-btn" onclick="go('stats')"><span class="nb-icon">▦</span> Estadísticas</button>
+      <button class="nav-btn" onclick="go('config')"><span class="nb-icon">◎</span> Configuración</button>
+      <button class="nav-btn" onclick="go('reportes')"><span class="nb-icon">↓</span> Reportes PDF</button>
+    </div>
+  </nav>
+  <div class="sid-footer">
+    <div class="user-chip">
+      <div class="u-av">AM</div>
+      <div><div class="u-name">Admin Maestra</div><div class="u-role">ADMINISTRADOR</div></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;justify-content:center" onclick="doLogout()">🔒 Cerrar sesión</button>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="tb-left">
+      <span class="tb-page-title" id="tb-title">Dashboard</span>
+      <div class="tb-breadcrumb"><span class="sep">/</span><span id="tb-sub">inicio</span></div>
+    </div>
+    <div class="tb-right">
+      <div id="horario-badge" class="horario-pill hp-n"><span class="blink" style="display:none"></span>Fuera de horario</div>
+      <div class="tb-clock" id="clock">--:--:--</div>
+      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
+      <div class="sys-pill ok" id="sys-pill"><span class="blink"></span><span id="sys-txt">ACTIVO</span></div>
+    </div>
+  </header>
+
+  <!-- ══ DASHBOARD ══ -->
+  <div class="page active" id="page-dashboard">
+    <div class="hero">
+      <div class="hero-scan"></div>
+      <div class="hero-tag">Sistema Biométrico v7 · PlazaVea</div>
+      <div class="hero-h1">Control de Acceso <span>Inteligente</span></div>
+      <div class="hero-desc">Reconocimiento facial IA · Mejora automática de imagen · Visión nocturna avanzada · Alarma con voz · Reportes periódicos.</div>
+      <div class="hero-kpis">
+        <div class="hkpi"><div class="num" id="hk-emp">0</div><div class="lbl">Empleados activos</div><div class="delta neu">→ registrados</div></div>
+        <div class="hkpi"><div class="num" id="hk-hoy">0</div><div class="lbl">Entradas hoy</div><div class="delta up">↑ auto-detectado</div></div>
+        <div class="hkpi"><div class="num" id="hk-neg">0</div><div class="lbl">Denegados</div><div class="delta" id="hk-neg-d">↓ normal</div></div>
+        <div class="hkpi"><div class="num" id="hk-alerts">0</div><div class="lbl">Alertas</div><div class="delta dn">— revisar</div></div>
+      </div>
+    </div>
+    <div class="qa-grid">
+      <div class="qa-card primary" onclick="go('cameras')"><span class="qa-icon">◉</span><div class="qa-title">Cámaras en vivo</div><div class="qa-desc">Reconocimiento facial IA</div></div>
+      <div class="qa-card" onclick="openModal('m-emp')"><span class="qa-icon">+</span><div class="qa-title">Nuevo empleado</div><div class="qa-desc">Cámara o imagen subida</div></div>
+      <div class="qa-card" onclick="go('registros')"><span class="qa-icon">≡</span><div class="qa-title">Ver registros</div><div class="qa-desc">Entradas y salidas</div></div>
+      <div class="qa-card" onclick="go('reportes')"><span class="qa-icon">↓</span><div class="qa-title">Reportes PDF</div><div class="qa-desc">Diario, semanal, mensual</div></div>
+      <div class="qa-card" onclick="go('alertas')"><span class="qa-icon">⚠</span><div class="qa-title">Alertas</div><div class="qa-desc">Detecciones fuera de horario</div></div>
+      <div class="qa-card" onclick="go('config')"><span class="qa-icon">◎</span><div class="qa-title">Configuración</div><div class="qa-desc">Horarios, alarma, cámara</div></div>
+    </div>
+    <div class="g-main">
+      <div class="card"><div class="card-head"><span class="card-title">Actividad reciente</span><span class="card-action" onclick="go('registros')">VER TODO →</span></div><div id="dash-feed"></div></div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card"><div class="card-head"><span class="card-title">Horario activo</span></div><div style="padding:14px" id="dash-horario"></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">Personal (top 5)</span><span class="card-action" onclick="go('personal')">VER TODO →</span></div><div id="dash-emp"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CÁMARAS ══ -->
+  <div class="page" id="page-cameras">
+    <div class="ph">
+      <div><div class="ph-title">Cámaras en vivo</div><div class="ph-sub">IA Facial · Mejora automática · Visión nocturna · Alarma</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-primary" id="btn-all-start" onclick="startAllCams()">▶ Iniciar todas</button>
+        <button class="btn btn-ghost" id="btn-all-stop" onclick="stopAllCams()" style="display:none">■ Detener</button>
+        <button class="btn btn-danger btn-sm" id="btn-alarm-stop" onclick="stopAlarm()" style="display:none">🔕 Silenciar alarma</button>
+      </div>
+    </div>
+    <div id="cam-alerts"></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px">CÁMARAS:</span>
+      <div class="chips" style="margin:0">
+        <div class="chip active" onclick="setCamCount(1,this)">1 CAM</div>
+        <div class="chip" onclick="setCamCount(2,this)">2 CAMS</div>
+        <div class="chip" onclick="setCamCount(4,this)">4 CAMS</div>
+      </div>
+      <span class="badge b-a" id="model-badge" style="margin-left:auto">Cargando IA...</span>
+    </div>
+    <div class="cam-layout">
+      <div><div id="cams-grid" style="display:grid;gap:14px"></div></div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Estado del sistema</span></div>
+          <div style="padding:12px 16px">
+            <div class="info-row"><span class="k">Empleados BD</span><span class="v" id="st-emp-count">0</span></div>
+            <div class="info-row"><span class="k">Con rostro registrado</span><span class="v" id="st-with-face">0</span></div>
+            <div class="info-row"><span class="k">Umbral similitud</span><span class="v" id="st-thresh">0.50</span></div>
+            <div class="info-row"><span class="k">Modo horario</span><span class="v" id="st-horario-val">—</span></div>
+            <div class="info-row"><span class="k">Registros totales</span><span class="v" id="st-regs-hoy">0</span></div>
+            <div class="info-row"><span class="k">Detecciones sesión</span><span class="v" id="st-detected">0</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Detecciones recientes</span></div>
+          <div id="det-log" style="max-height:360px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ REGISTROS ══ -->
+  <div class="page" id="page-registros">
+    <div class="ph">
+      <div><div class="ph-title">Registros de Acceso</div><div class="ph-sub">Con foto capturada · Historial completo · Clic en foto para ampliar</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openModal('m-del-records')">🗑 Gestionar</button>
+        <button class="btn btn-primary" onclick="go('reportes')">↓ PDF</button>
+      </div>
+    </div>
+    <div class="chips">
+      <div class="chip active" onclick="setRegFilter('todos',this)">Todos</div>
+      <div class="chip" onclick="setRegFilter('entrada',this)">Entradas</div>
+      <div class="chip" onclick="setRegFilter('salida',this)">Salidas</div>
+      <div class="chip" onclick="setRegFilter('denegado',this)">Denegados</div>
+      <div class="chip" onclick="setRegFilter('alerta',this)">Alertas</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <input class="search-input" id="reg-search" placeholder="Buscar por nombre o DNI..." oninput="renderRegistros()">
+      <input type="date" id="reg-date-filter" style="width:160px" onchange="renderRegistros()">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('reg-date-filter').value='';renderRegistros()">✕ Fecha</button>
+    </div>
+    <div class="card" id="registros-list"></div>
+  </div>
+
+  <!-- ══ ALERTAS ══ -->
+  <div class="page" id="page-alertas">
+    <div class="ph">
+      <div><div class="ph-title">Alertas de Seguridad</div><div class="ph-sub">Detecciones fuera de horario · Personas desconocidas</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-danger btn-sm" id="btn-stop-alarm-alerts" onclick="stopAlarm()" style="display:none">🔕 Silenciar alarma</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearAlertas()">🗑 Limpiar alertas</button>
+      </div>
+    </div>
+    <div class="card" id="alertas-list"></div>
+  </div>
+
+  <!-- ══ PERSONAL ══ -->
+  <div class="page" id="page-personal">
+    <div class="ph">
+      <div><div class="ph-title">Personal</div><div class="ph-sub">Colaboradores registrados en el sistema biométrico</div></div>
+      <div class="ph-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-show-inactive" onclick="toggleShowInactive()">Mostrar inactivos</button>
+        <button class="btn btn-amber btn-sm" onclick="openModal('m-del-personal')">🗑 Gestionar datos</button>
+        <button class="btn btn-primary" onclick="openModal('m-emp')">+ Nuevo empleado</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <input class="search-input" id="emp-search" placeholder="Buscar nombre o DNI..." oninput="renderTable()">
+      <select id="emp-rol-filter" style="width:150px" onchange="renderTable()">
+        <option value="">Todos los roles</option>
+        <option>empleado</option><option>cajero</option><option>supervisor</option><option>seguridad</option><option>admin</option>
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Empleado</th><th>DNI</th><th>Rol</th><th>Área</th><th>Celular</th><th>Correo</th><th>Dirección</th><th>Desc.</th><th>Foto</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="emp-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ ESTADÍSTICAS ══ -->
+  <div class="page" id="page-stats">
+    <div class="ph">
+      <div><div class="ph-title">Estadísticas</div><div class="ph-sub">Métricas del sistema biométrico</div></div>
+      <button class="btn btn-primary" onclick="go('reportes')">↓ Reporte PDF</button>
+    </div>
+    <div class="stat-row" id="stats-kpis"></div>
+    <div class="g2">
+      <div class="card" style="padding:18px">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;color:var(--text2)">Accesos por hora — Hoy</div>
+        <div class="bar-chart" id="hour-chart"></div>
+        <div style="display:flex;margin-top:4px" id="hour-labels"></div>
+      </div>
+      <div class="card" style="padding:18px">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;color:var(--text2)">Top empleados</div>
+        <div id="top-emps"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ REPORTES ══ -->
+  <div class="page" id="page-reportes">
+    <div class="ph">
+      <div><div class="ph-title">Reportes PDF</div><div class="ph-sub">Hora entrada/salida · Nombre · Captura automática</div></div>
+    </div>
+    <div class="period-tabs">
+      <div class="pt active" onclick="setPeriod('dia',this)">Diario</div>
+      <div class="pt" onclick="setPeriod('semana',this)">Semanal</div>
+      <div class="pt" onclick="setPeriod('mes',this)">Mensual</div>
+      <div class="pt" onclick="setPeriod('trimestre',this)">Trimestral</div>
+      <div class="pt" onclick="setPeriod('anual',this)">Anual</div>
+    </div>
+    <div class="g2" style="max-width:900px">
+      <div class="card" style="padding:20px">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;color:var(--text2)">Parámetros del reporte</div>
+        <div class="field"><label class="label">Período seleccionado</label><input type="text" id="pdf-period-txt" readonly style="background:var(--bg4);color:var(--text3)"></div>
+        <div class="field"><label class="label">Fecha de inicio</label><input type="date" id="pdf-from"></div>
+        <div class="field"><label class="label">Fecha de fin</label><input type="date" id="pdf-to"></div>
+        <div class="field"><label class="label">Filtro de tipo</label>
+          <select id="pdf-type-filter">
+            <option value="">Todos los tipos</option>
+            <option value="entrada">Solo entradas</option>
+            <option value="salida">Solo salidas</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;justify-content:center" onclick="genPDF()">↓ Generar Reporte PDF</button>
+      </div>
+      <div class="card" style="padding:20px">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;color:var(--text2)">Resumen del período</div>
+        <div id="pdf-preview-stats"><div class="no-data">Selecciona un período</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CONFIGURACIÓN ══ -->
+  <div class="page" id="page-config">
+    <div class="ph"><div><div class="ph-title">Configuración</div><div class="ph-sub">Contraseña requerida para cambios · Solo administradores</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="card-head"><span class="card-title">⏰ Horarios automáticos</span></div>
+          <div style="padding:16px">
+            <div class="config-row">
+              <div><div class="config-label">Horario de Entrada</div><div class="config-sub">Rango para registrar ENTRADA</div></div>
+              <div class="time-pair"><input type="time" id="cfg-ein" value="07:00"><span>–</span><input type="time" id="cfg-efin" value="07:30"></div>
+            </div>
+            <div class="config-row">
+              <div><div class="config-label">Horario de Salida</div><div class="config-sub">Rango para registrar SALIDA</div></div>
+              <div class="time-pair"><input type="time" id="cfg-sin" value="18:00"><span>–</span><input type="time" id="cfg-sfin" value="18:30"></div>
+            </div>
+            <div class="config-row">
+              <div><div class="config-label" style="color:var(--red)">Alarma + voz continua</div><div class="config-sub">60s sirena + voz identificando persona fuera de horario</div></div>
+              <label class="toggle"><input type="checkbox" id="cfg-alerta" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="config-row">
+              <div><div class="config-label">Rango horario laboral</div><div class="config-sub">Fuera de este rango dispara alarma</div></div>
+              <div class="time-pair"><input type="time" id="cfg-alarm-start" value="07:00"><span>–</span><input type="time" id="cfg-alarm-end" value="18:30"></div>
+            </div>
+            <div class="config-row">
+              <div><div class="config-label">Intervalo re-autenticación (seg)</div><div class="config-sub">Tiempo mínimo entre registros del mismo empleado</div></div>
+              <input type="number" id="cfg-reauth" value="5" min="1" max="120" style="width:70px">
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">🎥 Mejora automática de imagen</span></div>
+          <div style="padding:16px">
+            <div class="config-row">
+              <div><div class="config-label">Auto-mejora activa</div><div class="config-sub">Aplica correcciones automáticas en tiempo real</div></div>
+              <label class="toggle"><input type="checkbox" id="cfg-autoenhance" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="field"><label class="label">Brillo (%) <span id="lbl-brightness">110</span></label><input type="range" id="cfg-brightness" min="50" max="200" value="110" oninput="updateCamLabel('brightness',this.value);applyCamFilters()"></div>
+            <div class="field"><label class="label">Contraste (%) <span id="lbl-contrast">120</span></label><input type="range" id="cfg-contrast" min="50" max="250" value="120" oninput="updateCamLabel('contrast',this.value);applyCamFilters()"></div>
+            <div class="field"><label class="label">Saturación (%) <span id="lbl-saturate">110</span></label><input type="range" id="cfg-saturate" min="0" max="300" value="110" oninput="updateCamLabel('saturate',this.value);applyCamFilters()"></div>
+            <div class="field"><label class="label">Nitidez — sharpness (%) <span id="lbl-sharp">100</span></label><input type="range" id="cfg-sharp" min="0" max="200" value="100" oninput="updateCamLabel('sharp',this.value);applyCamFilters()"></div>
+            <div class="config-row">
+              <div><div class="config-label">Visión nocturna avanzada</div><div class="config-sub">Activa fuera de horario o en baja luz</div></div>
+              <label class="toggle"><input type="checkbox" id="cfg-nightvision" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="config-row">
+              <div><div class="config-label">Auto-detección de baja luz</div><div class="config-sub">Activa visión nocturna automáticamente</div></div>
+              <label class="toggle"><input type="checkbox" id="cfg-auto-nv" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="card-head"><span class="card-title">◉ Reconocimiento facial</span></div>
+          <div style="padding:16px">
+            <div class="field"><label class="label">Umbral de similitud (0.1–1.0)</label><input type="number" id="cfg-thresh" value="0.50" min="0.1" max="1" step="0.05"><div class="hint">Menor = más estricto · Recomendado: 0.45–0.55</div></div>
+            <div class="field"><label class="label">Muestras al registrar</label><input type="number" id="cfg-samples" value="8" min="3" max="20"></div>
+            <div class="divider"></div>
+            <div class="info-row"><span class="k">Motor IA</span><span class="v">face-api.js · FaceNet 128D</span></div>
+            <div class="info-row"><span class="k">Con rostro registrado</span><span class="v" id="cfg-with-face">0</span></div>
+            <div class="info-row"><span class="k">Total eventos</span><span class="v" id="cfg-total-ev">0</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">🔒 Seguridad de acceso</span></div>
+          <div style="padding:16px">
+            <div class="field"><label class="label">Contraseña actual</label><input type="password" id="cfg-currpass" placeholder="Contraseña actual"></div>
+            <div class="field"><label class="label">Nueva contraseña</label><input type="password" id="cfg-newpass" placeholder="Mín. 4 caracteres"></div>
+            <div class="field"><label class="label">Confirmar contraseña</label><input type="password" id="cfg-newpass2" placeholder="Repite la contraseña"></div>
+            <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:12px;justify-content:center" onclick="changePassword()">Cambiar contraseña</button>
+            <div class="divider"></div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--red);margin-bottom:10px;letter-spacing:.5px">ZONA PELIGROSA</div>
+            <button class="btn btn-danger btn-sm" style="width:100%;margin-bottom:8px;justify-content:center" onclick="openModal('m-del-records')">🗑 Borrar registros</button>
+            <button class="btn btn-danger btn-sm" style="width:100%;margin-bottom:8px;justify-content:center" onclick="openModal('m-del-personal')">👤 Borrar personal</button>
+            <button class="btn btn-danger btn-sm" style="width:100%;margin-bottom:8px;justify-content:center" onclick="openModal('m-wipe')">⚠ Resetear sistema</button>
+            <button class="btn btn-cyan btn-sm" style="width:100%;justify-content:center" onclick="saveConfig()">💾 Guardar configuración</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">🌙 Apariencia</span></div>
+          <div style="padding:16px">
+            <div class="config-row">
+              <div><div class="config-label">Modo oscuro / claro</div></div>
+              <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="cfg-theme-btn">🌙 Cambiar a claro</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- ══ MODAL: Nuevo empleado ══ -->
+<div class="overlay" id="m-emp" onclick="closeOvClick(event,'m-emp')">
+  <div class="modal" style="width:640px">
+    <div class="modal-head"><div class="modal-title">Registrar Empleado</div><button class="modal-close" onclick="closeModal('m-emp');stopRegCam()">✕</button></div>
+    <div class="modal-body">
+      <div class="img-source-tabs" style="margin-bottom:14px">
+        <div class="ist active" id="src-cam" onclick="setRegSource('cam')">📷 Cámara en vivo</div>
+        <div class="ist" id="src-img" onclick="setRegSource('img')">🖼 Subir imagen</div>
+      </div>
+      <div id="reg-cam-section">
+        <div class="reg-cam-wrap" id="reg-cam-frame" onclick="startRegCam()">
+          <div class="reg-cam-ph" id="reg-cam-ph">
+            <div style="font-size:40px;opacity:.15">📷</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);text-align:center;line-height:1.7;letter-spacing:1px;text-transform:uppercase">Clic para activar cámara<br>Centra tu cara en el recuadro</div>
+          </div>
+          <video id="reg-video" autoplay muted playsinline></video>
+          <div class="reg-scan-ov" id="reg-scan-ov" style="display:none">
+            <div class="reg-guide"></div>
+            <div class="reg-scan-line"></div>
+          </div>
+        </div>
+      </div>
+      <div id="reg-img-section" style="display:none">
+        <div id="img-preview-wrap" style="display:none;margin-bottom:12px;border-radius:8px;overflow:hidden;aspect-ratio:4/3"><img id="img-preview-el" src="" style="width:100%;height:100%;object-fit:cover"></div>
+        <div class="img-upload-area" id="img-drop-area">
+          <input type="file" accept="image/*" id="img-file-input" onchange="handleImageUpload(this.files[0])">
+          <div style="font-size:32px;margin-bottom:8px;opacity:.3">🖼</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);line-height:1.7;letter-spacing:.5px">ARRASTRA UNA FOTO AQUÍ O HAZ CLIC<br><span style="font-size:9px">JPG, PNG, WEBP · Máx 10MB · Foto de frente</span></div>
+        </div>
+        <div id="img-status" style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);text-align:center"></div>
+      </div>
+      <div id="reg-prog-area" style="display:none;margin:12px 0">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3)">Capturando descriptores faciales...</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:700;color:var(--cyan)" id="reg-prog-txt">0/8</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="reg-prog-fill" style="width:0%"></div></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);margin-top:4px" id="reg-status-txt">Esperando cara...</div>
+      </div>
+      <!-- Datos del empleado -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field" style="margin:0"><label class="label">Nombre completo *</label><input type="text" id="r-name" placeholder="Ej. María Torres Quispe"></div>
+        <div class="field" style="margin:0"><label class="label">DNI *</label><input type="text" id="r-dni" maxlength="8" placeholder="12345678"></div>
+        <div class="field" style="margin:0"><label class="label">Cargo / Rol *</label>
+          <select id="r-rol"><option>empleado</option><option>cajero</option><option>supervisor</option><option>seguridad</option><option>admin</option></select>
+        </div>
+        <div class="field" style="margin:0"><label class="label">Área / Departamento</label><input type="text" id="r-area" placeholder="Ej. Cajas, Almacén..."></div>
+        <div class="field" style="margin:0"><label class="label">Celular</label><input type="tel" id="r-cel" placeholder="987654321"></div>
+        <div class="field" style="margin:0"><label class="label">Correo electrónico</label><input type="email" id="r-email" placeholder="correo@ejemplo.com"></div>
+        <div class="field" style="margin:0;grid-column:span 2"><label class="label">Dirección / Domicilio</label><input type="text" id="r-dir" placeholder="Av. Los Álamos 123, Ica"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-emp');stopRegCam()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">Guardar empleado</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Eliminar ══ -->
+<div class="overlay" id="m-del" onclick="closeOvClick(event,'m-del')">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head"><div></div><button class="modal-close" onclick="closeModal('m-del')">✕</button></div>
+    <div class="modal-body" style="text-align:center;padding-top:8px">
+      <div style="font-size:44px;margin-bottom:10px">⚠️</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text);margin-bottom:6px">¿Desactivar empleado?</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">Se desactivará el acceso de <b id="del-name-txt" style="color:var(--text)"></b>.</div>
+      <div style="margin-top:14px;padding:10px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;justify-content:center">
+          <input type="checkbox" id="del-hard" style="accent-color:var(--red);width:auto">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--amber)">Eliminar permanentemente</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-del')">Cancelar</button><button class="btn btn-danger" onclick="confirmDelete()">Confirmar</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Editar ══ -->
+<div class="overlay" id="m-edit" onclick="closeOvClick(event,'m-edit')">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Editar Empleado</div><button class="modal-close" onclick="closeModal('m-edit')">✕</button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label class="label">Nombre completo</label><input type="text" id="e-name"></div>
+        <div class="field"><label class="label">DNI</label><input type="text" id="e-dni" maxlength="8"></div>
+        <div class="field"><label class="label">Rol</label>
+          <select id="e-rol"><option>empleado</option><option>cajero</option><option>supervisor</option><option>seguridad</option><option>admin</option></select>
+        </div>
+        <div class="field"><label class="label">Área</label><input type="text" id="e-area"></div>
+        <div class="field"><label class="label">Celular</label><input type="tel" id="e-cel"></div>
+        <div class="field"><label class="label">Correo</label><input type="email" id="e-email"></div>
+        <div class="field" style="grid-column:span 2"><label class="label">Dirección</label><input type="text" id="e-dir"></div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3);margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase">Foto de perfil — opcional</div>
+      <div class="img-upload-area" style="padding:12px">
+        <input type="file" accept="image/*" onchange="handleEditPhotoUpload(this.files[0])">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text3)">📷 Actualizar foto de perfil</div>
+      </div>
+      <div id="edit-photo-preview" style="margin-top:8px;display:none;align-items:center;gap:8px">
+        <img id="edit-photo-img" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:2px solid var(--green)">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green)">✓ Foto lista</span>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-edit')">Cancelar</button><button class="btn btn-primary" onclick="saveEdit()">Guardar cambios</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Borrar registros ══ -->
+<div class="overlay" id="m-del-records" onclick="closeOvClick(event,'m-del-records')">
+  <div class="modal wipe-modal" style="max-width:420px">
+    <div class="modal-head"><div class="modal-title" style="color:var(--red)">⚠ Gestionar Registros</div><button class="modal-close" onclick="closeModal('m-del-records')">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label class="label">Contraseña de administrador</label><input type="password" id="del-rec-pass" placeholder="Ingresa contraseña (2005)"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="secureDeleteRecords('today')">🗑 Borrar registros de hoy</button>
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="secureDeleteRecords('all')">🗑 Borrar todos los registros</button>
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="secureDeleteRecords('photos')">🖼 Borrar solo fotos</button>
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="secureDeleteRecords('alerts')">⚠ Borrar todas las alertas</button>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-del-records')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Borrar personal ══ -->
+<div class="overlay" id="m-del-personal" onclick="closeOvClick(event,'m-del-personal')">
+  <div class="modal wipe-modal" style="max-width:420px">
+    <div class="modal-head"><div class="modal-title" style="color:var(--red)">⚠ Gestionar Personal</div><button class="modal-close" onclick="closeModal('m-del-personal')">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label class="label">Contraseña de administrador</label><input type="password" id="del-per-pass" placeholder="Ingresa contraseña"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="secureDeletePersonal('inactive')">🚫 Eliminar empleados inactivos</button>
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="secureDeletePersonal('faces')">🗑 Borrar descriptores faciales</button>
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="secureDeletePersonal('photos')">🖼 Borrar fotos de perfil</button>
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="secureDeletePersonal('all')">⚠ Eliminar todo el personal</button>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-del-personal')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Wipe ══ -->
+<div class="overlay" id="m-wipe" onclick="closeOvClick(event,'m-wipe')">
+  <div class="modal wipe-modal" style="max-width:420px">
+    <div class="modal-head"><div class="modal-title" style="color:var(--red)">⚠ Resetear Sistema</div><button class="modal-close" onclick="closeModal('m-wipe')">✕</button></div>
+    <div class="modal-body" style="text-align:center">
+      <div style="font-size:50px;margin-bottom:12px">💀</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:8px">ACCIÓN IRREVERSIBLE</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px">Se borrarán TODOS los datos del sistema.</div>
+      <div class="field"><label class="label">Contraseña de administrador</label><input type="password" id="wipe-pass" placeholder="Contraseña"></div>
+      <div class="field"><label class="label">Escribe CONFIRMAR</label><input type="text" id="wipe-confirm" placeholder="CONFIRMAR"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-wipe')">Cancelar</button>
+      <button class="btn btn-danger" onclick="wipeAll()">💀 Resetear todo</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="assets/js/models/modelo.js"></script>
+<script src="assets/js/controllers/controlador.js"></script>
+</body>
+</html>
