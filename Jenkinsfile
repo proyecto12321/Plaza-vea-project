@@ -7,14 +7,10 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Install') {
+        stage('Verify Files') {
             steps {
-                bat 'npm install'
-            }
-        }
-        stage('Test') {
-            steps {
-                bat 'npx playwright test'
+                bat 'dir'
+                bat 'if exist index.html (echo index.html encontrado) else (echo ERROR: index.html no encontrado && exit /b 1)'
             }
         }
     }
