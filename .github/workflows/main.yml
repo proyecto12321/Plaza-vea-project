@@ -1,0 +1,29 @@
+name: Pipeline Plaza Vea
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verificar:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Mostrar archivos
+        run: ls -R
+
+      - name: Verificar que exista index.html
+        run: test -f index.html
+
+      - name: Pipeline ejecutado correctamente
+        run: echo "Todo salió correctamente"
