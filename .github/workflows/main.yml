@@ -22,8 +22,8 @@ jobs:
       - name: Mostrar archivos
         run: ls -R
 
-      - name: Verificar que exista index123.html
-  run: test -f index123.html
+      - name: Verificar que exista index.html
+        run: test -f index.html
 
       - name: Pipeline ejecutado correctamente
-        run: echo "Todo salió correctamente"
+        run: echo "Todo salió correctamente" como simulo el fallo 
