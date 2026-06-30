@@ -10,9 +10,8 @@ pipeline {
         stage('Verify Files') {
             steps {
                 bat 'dir'
-                bat 'if exist index.html (echo index.html encontrado) else (echo ERROR: index.html no encontrado && exit /b 1)'
-            }
-        }
+                bat 'if exist index.html (echo index.html encontrado) else (echo ERROR: index.html no encontrado && ext /b 1)'
+            
     }
 
     post {
